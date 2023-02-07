@@ -1,3 +1,8 @@
+1.0.1
+** OpenSubtitles Plus by Burekas **
+- Added support for manual search with these characters (+,-,_,.) as a seperator
+- Kodi Nexus 20 support
+
 1.0.0
 ** OpenSubtitles Plus by Burekas **
 - Forked of amet and burekas 5.4.16

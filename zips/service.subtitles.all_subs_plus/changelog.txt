@@ -1,3 +1,12 @@
+1.0.2
+** All Subs Plus by Burekas **
+- Fix for AutoSubs
+- Fix for subtitles built-in google translate
+- Fix for SMB as a playback source
+- Fix for a movie case (When movie doesn't have a year value and title language is not in English)
+- Added support for manual search with these characters (+,-,_,.) as a seperator
+- Kodi Nexus 20 support
+
 1.0.1
 ** All Subs Plus by Burekas **
 - Bug Fix: Checking subtitles for Kodi Library - TV Shows - Playback is on
