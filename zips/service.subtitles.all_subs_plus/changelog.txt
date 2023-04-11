@@ -1,3 +1,7 @@
+2.0.1
+** All Subs Plus by Burekas **
+- Hotfix (Subscene)
+
 2.0.0
 ** All Subs Plus by Burekas **
 - Fix: Subscene provider
