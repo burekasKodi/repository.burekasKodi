@@ -1,4 +1,4 @@
-2.0.2
+2.0.3
 ** All Subs Plus by Burekas **
 - Fixes and improvements for AutoSub
 - Some general bug fixes and improvements
