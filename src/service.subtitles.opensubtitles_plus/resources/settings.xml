@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<settings version="1">
+	<section id="service.subtitles.opensubtitles_plus">
+		<category id="login details" label="32004" help="">
+			<group id="1">
+				<setting id="OSuser" type="string" label="32002" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32002</heading>
+					</control>
+				</setting>
+				<setting id="OSpass" type="string" label="32003" help="">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32003</heading>
+						<hidden>true</hidden>
+					</control>
+			</setting>
+			</group>
+		</category>
+		<category id="advanced" label="32005" help="">
+			<group id="1">
+				<setting id="json_cache" type="boolean" label="32006" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+		</category>
+	</section>
+</settings>
