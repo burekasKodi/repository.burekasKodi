@@ -42,7 +42,7 @@ def fileopen(input_file):
     return [tmp, enc]
 
 
-def srt2ass(input_file,all_setting):
+def srt2ass(input_file, all_setting):
     if  all_setting["background"]== 'true':
        background='3'
     else:

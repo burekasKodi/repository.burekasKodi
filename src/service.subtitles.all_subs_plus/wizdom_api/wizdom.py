@@ -78,11 +78,11 @@ def GetWizJson(imdb,prefix_wizdom,color_wizdom,season=0,episode=0,version=0):
     else:
         return subtitle_list,json_object
 
-def wizdom_download_sub(id,archive_file):
+def wizdom_download_sub(id, archive_file):
     try:
         from urllib import urlretrieve
     except:
         from urllib.request import urlretrieve
 
     if not path.exists(archive_file):
-        urlretrieve("http://%s/"%format(get_wizdom_url())+"/files/sub/"+id, archive_file)
+        urlretrieve("http://%s/" % format(get_wizdom_url()) + "/files/sub/" + id, archive_file)
