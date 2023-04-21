@@ -15,7 +15,7 @@ else:
     import xbmcvfs
     xbmc_translate_path=xbmcvfs.translatePath
 
-__addon__ = xbmcaddon.Addon()
+__addon__      = xbmcaddon.Addon()
 __author__     = __addon__.getAddonInfo('author')
 __scriptid__   = __addon__.getAddonInfo('id')
 __scriptname__ = __addon__.getAddonInfo('name')
@@ -42,7 +42,7 @@ except:
     from urllib.request import urlretrieve
     from urllib.parse import  unquote_plus, unquote,  quote
 
-def GetOpenSubtitlesJson( item,imdb_id ,mode_subtitle,all_setting,prefix_open, color_open):
+def GetOpenSubtitlesJson(item, imdb_id, mode_subtitle, all_setting, prefix_open, color_open):
     myLogger("Search_opensubtitle imdb: " + imdb_id)
     search_data = []
     search_data = OSDBServer().searchsubtitles(item,imdb_id,all_setting)
@@ -103,21 +103,21 @@ def GetOpenSubtitlesJson( item,imdb_id ,mode_subtitle,all_setting,prefix_open, c
                          #'hearing_imp': "true" if int(item_data["SubHearingImpaired"]) != 0 else "false",
                          'sync': ("false", "true")[str(item_data["MatchedBy"]) == "moviehash"]}
 
-                if mode_subtitle>1  :
+                if mode_subtitle > 1:
                     if url not in url_list:
-
-                      url_list.append(url)
-                      subtitle_list.append(json_data)
+                        url_list.append(url)
+                        subtitle_list.append(json_data)
                     #xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=listitem,isFolder=False)
                     #x=x+1
+
                 else:
                     subtitle_list.append(json_data)
-                    return  Download_opensubtitle( item_data["IDSubtitleFile"],item_data["ZipDownloadLink"],item_data["SubFormat"],mode_subtitle),subtitle_list
+                    return Download_opensubtitle(item_data["IDSubtitleFile"], item_data["ZipDownloadLink"], item_data["SubFormat"], mode_subtitle), subtitle_list
 
                     break
         return subtitle_list,search_data
 
-def Download_opensubtitle(id,url,filename,subformat,mode_subtitle,stack=False):
+def Download_opensubtitle(id, url, filename, subformat, mode_subtitle, stack=False):
     from service import MyZipFolder2,MySubFolder2
     MyZipFolder = MyZipFolder2
     MySubFolder = MySubFolder2

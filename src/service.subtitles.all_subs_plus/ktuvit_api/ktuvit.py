@@ -43,9 +43,10 @@ def get_login_cook():
     login_cook_fix={}
     for cookie in login_cook:
         login_cook_fix[cookie.name]=cookie.value
+
     return login_cook_fix
 
-def get_ktuvit_data(item,imdb_id):
+def get_ktuvit_data(item, imdb_id):
     from service import is_local_file_tvshow
 
     regexHelper = re.compile('\W+', re.UNICODE)
@@ -155,26 +156,26 @@ def get_ktuvit_data(item,imdb_id):
 def parse_ktuvit_response(response,f_id,prefix_ktuvit,color_ktuvit):
     MyScriptID = xbmcaddon.Addon().getAddonInfo('id')
 
-    regex='<tr>(.+?)</tr>'
-    m_pre=re.compile(regex,re.DOTALL).findall(response.decode('utf-8'))
+    regex = '<tr>(.+?)</tr>'
+    m_pre = re.compile(regex,re.DOTALL).findall(response.decode('utf-8'))
     #z=1
-    subtitle=' '
-    subtitle_list=[]
+    subtitle = ' '
+    subtitle_list = []
 
     for itt in m_pre:
-        regex='<div style="float.+?>(.+?)<br />.+?data-subtitle-id="(.+?)"'
-        m=re.compile(regex,re.DOTALL).findall(itt)
-        if len(m)==0:
+        regex = '<div style="float.+?>(.+?)<br />.+?data-subtitle-id="(.+?)"'
+        m = re.compile(regex,re.DOTALL).findall(itt)
+        if len(m) == 0:
             continue
 
         if ('i class' in m[0][0]):    #burekas fix for KT titles
-            regex='כתובית מתוקנת\'></i>(.+?)$'
-            n=re.compile(regex,re.DOTALL).findall(m[0][0])
-            nm=n[0].replace('\n','').replace('\r','').replace('\t','').replace(' ','')
+            regex = 'כתובית מתוקנת\'></i>(.+?)$'
+            n = re.compile(regex,re.DOTALL).findall(m[0][0])
+            nm = n[0].replace('\n','').replace('\r','').replace('\t','').replace(' ','')
         else:
-            nm=m[0][0].replace('\n','').replace('\r','').replace('\t','').replace(' ','')
+            nm = m[0][0].replace('\n','').replace('\r','').replace('\t','').replace(' ','')
 
-        data='{"request":{"FilmID":"%s","SubtitleID":"%s","FontSize":0,"FontColor":"","PredefinedLayout":-1}}'%(f_id,m[0][1])
+        data = '{"request":{"FilmID":"%s","SubtitleID":"%s","FontSize":0,"FontColor":"","PredefinedLayout":-1}}'%(f_id,m[0][1])
 
         nlabel = "Hebrew"
         nlabel2 = '[COLOR '+color_ktuvit+']'+nm+'[/COLOR]'
@@ -190,19 +191,19 @@ def parse_ktuvit_response(response,f_id,prefix_ktuvit,color_ktuvit):
                                                                               nthumb)
 
         json_data={'url':url,
-                            'label':nlabel,
-                            'label2':nlabel2,
-                            'iconImage':nicon,
-                            'thumbnailImage':nthumb,
-                            'hearing_imp':'false',
-                            'sync': 'false'}
+                   'label':nlabel,
+                   'label2':nlabel2,
+                   'iconImage':nicon,
+                   'thumbnailImage':nthumb,
+                   'hearing_imp':'false',
+                   'sync': 'false'}
 
         subtitle_list.append(json_data)
         #z=z+1
 
-    return subtitle_list,m_pre
+    return subtitle_list, m_pre
 
-def ktuvit_download_sub(id,MySubFolder,mode_subtitle):
+def ktuvit_download_sub(id, MySubFolder, mode_subtitle):
     from os import path
 
     #font_c="0"
@@ -255,14 +256,14 @@ def ktuvit_download_sub(id,MySubFolder,mode_subtitle):
     # Throw an error for bad status codes
     response.raise_for_status()
 
-    subtitle_list=[]
+    subtitle_list = []
     with open(archive_file, 'wb') as handle:
         for block in response.iter_content(1024):
             handle.write(block)
 
     subtitle_list.append(archive_file)
 
-    if mode_subtitle>1:
-        return subtitle_list," "
+    if mode_subtitle > 1:
+        return subtitle_list, " "
     else:
-        return subtitle_list,True
+        return subtitle_list, True

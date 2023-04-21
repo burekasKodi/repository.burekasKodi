@@ -3,7 +3,7 @@ import xbmcaddon
 import os
 from myLogger import myLogger
 
-def GetLocalJson(item,prefix_local,color_local,all_setting):
+def GetLocalJson(item, prefix_local, color_local, all_setting):
     import PTN
     from service import xbmc_translate_path #calc_sub_percent_sync
     from xbmcvfs import listdir
