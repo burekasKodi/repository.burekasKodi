@@ -14,7 +14,7 @@ import xbmcaddon
 import unicodedata,logging
 from xbmcaddon import Addon
 
-from myLogger import myLogger
+from myLogger import logger
 
 __addon__      = xbmcaddon.Addon()
 __version__    = __addon__.getAddonInfo('version') # Module version
@@ -29,8 +29,8 @@ class OSDBServer:
         self.server = xmlrpclib.Server( BASE_URL_XMLRPC, verbose=0 )
         socket.setdefaulttimeout(10)
         login = self.server.LogIn(__addon__.getSetting( "OSuser2" ), __addon__.getSetting( "OSpass2" ), "en", "%s_v%s" %(__scriptname__.replace(" ","_"),__version__))
-        myLogger('OpenSubtitles')
-        myLogger('OpenSubtitles Login: ' + repr(login))
+        logger.debug('OpenSubtitles')
+        logger.debug('OpenSubtitles Login: ' + repr(login))
         self.osdb_token  = login[ "token" ]
 
     def searchsubtitles( self, item, imdb_id, all_setting ):
@@ -57,7 +57,7 @@ class OSDBServer:
                all_lang=all_setting["other_lang"].split(",")
                for items in all_lang:
                  lang.append(str(items))
-            myLogger('Lang: ' + repr(lang))
+            logger.debug('Lang: ' + repr(lang))
             if len(tvshow) > 0:
                a=1
                OS_search_string = ("%s S%.2dE%.2d" % (tvshow,int(season),int(episode),)).replace(" ","+")
@@ -106,9 +106,9 @@ class OSDBServer:
             #                 'year'         :year
             #                }]
 
-            myLogger("Opensubtitles SearchSubtitles searchlist: " + repr(searchlist))
+            logger.debug("Opensubtitles SearchSubtitles searchlist: " + repr(searchlist))
             search = self.server.SearchSubtitles( self.osdb_token, searchlist )
-            myLogger("Opensubtitles SearchSubtitles search result: " + repr(search))
+            logger.debug("Opensubtitles SearchSubtitles search result: " + repr(search))
 
             try:
                 data = search["data"]

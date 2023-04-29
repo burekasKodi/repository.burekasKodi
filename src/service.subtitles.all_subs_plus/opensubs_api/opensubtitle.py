@@ -28,7 +28,7 @@ __resource__   = xbmc_translate_path( os.path.join( __cwd__, 'resources', 'lib' 
 
 sys.path.append (__resource__)
 
-from myLogger import myLogger
+from myLogger import logger
 
 from .OSUtilities import OSDBServer, log, hashFile, normalizeString
 
@@ -43,20 +43,20 @@ except:
     from urllib.parse import  unquote_plus, unquote,  quote
 
 def GetOpenSubtitlesJson(item, imdb_id, mode_subtitle, all_setting, prefix_open, color_open):
-    myLogger("Search_opensubtitle imdb: " + imdb_id)
+    logger.debug("Search_opensubtitle imdb: " + imdb_id)
     search_data = []
     search_data = OSDBServer().searchsubtitles(item,imdb_id,all_setting)
 
     subtitle_list=[]
 
     if search_data != None:
-        myLogger("Search_opensubtitle search_data: " + repr(search_data))
+        logger.debug("Search_opensubtitle search_data: " + repr(search_data))
         search_data.sort(key=lambda x: [not x['MatchedBy'] == 'moviehash',
                          not os.path.splitext(x['SubFileName'])[0] == os.path.splitext(os.path.basename(unquote(item['file_original_path'])))[0],
                          not normalizeString(xbmc.getInfoLabel("VideoPlayer.OriginalTitle")).lower() in x['SubFileName'].replace('.',' ').lower(),
                          not x['LanguageName'] == 'Undetermined'])
 
-        myLogger("Search_opensubtitle search_data sorted: " + repr(search_data))
+        logger.debug("Search_opensubtitle search_data sorted: " + repr(search_data))
         #x=1
         url_list=[]
         for item_data in search_data:
@@ -146,7 +146,7 @@ def Download_opensubtitle(id, url, filename, subformat, mode_subtitle, stack=Fal
         log( __name__,"Download Using HTTP")
         zip = os.path.join( MyZipFolder, "OpenSubtitles.zip")
         f = urllib.request.urlopen(url)
-        myLogger(url)
+        logger.debug(url)
         with open(zip, "wb") as subFile:
             subFile.write(f.read())
         subFile.close()

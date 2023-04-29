@@ -14,7 +14,7 @@ import string,time
 import difflib,gzip
 import logging
 
-from myLogger import myLogger
+from myLogger import logger
 
 try:
     import HTMLParser
@@ -133,7 +133,7 @@ if len(MyAddon.getSetting("other_lang"))>0:
      for items in all_lang:
        if items in all_nam_lang:
         subscene_languages.update(all_nam_lang[items])
-###myLogger(subscene_languages)
+###logger.debug(subscene_languages)
 aliases = {
     "marvels agents of shield" : "Agents of Shield",
     "marvels agents of s.h.i.e.l.d" : "Agents of Shield",
@@ -213,12 +213,12 @@ def find_movie(content, title, year):
 def get_language_codes(languages):
     codes = {}
     for lang in subscene_languages:
-        #myLogger(lang)
-        #myLogger(subscene_languages[lang]['3let'] )
+        #logger.debug(lang)
+        #logger.debug(subscene_languages[lang]['3let'] )
         if subscene_languages[lang]['3let'] in languages:
             codes[str(subscene_languages[lang]['id'])] = 1
-            #myLogger('lang')
-            #myLogger(str(subscene_languages[lang]['id']))
+            #logger.debug('lang')
+            #logger.debug(str(subscene_languages[lang]['id']))
     keys = codes.keys()
     return keys
 
@@ -226,7 +226,7 @@ main_url = "https://subscene.com"
 subscene_start = time.time()
 def log(module, msg):
     global subscene_start
-    myLogger(msg)
+    logger.debug(msg)
     xbmc.log((u"### [%s] %f - %s" % (module, time.time() - subscene_start, msg,)), level=xbmc.LOGDEBUG)
 
 def prepare_search_string(s):
@@ -236,9 +236,9 @@ def prepare_search_string(s):
 
 def search_subscene(item,mode_subtitle):
     filename = os.path.splitext(os.path.basename(item['file_original_path']))[0]
-   # #myLogger(__name__, "Search_subscene='%s', filename='%s', addon_version=%s" % (item, filename, __version__))
+   # #logger.debug(__name__, "Search_subscene='%s', filename='%s', addon_version=%s" % (item, filename, __version__))
 
-    #myLogger(item['tvshow'])
+    #logger.debug(item['tvshow'])
     lang=[]
     lang.append('heb')
     if MyAddon.getSetting("English")== 'true':
@@ -246,7 +246,7 @@ def search_subscene(item,mode_subtitle):
     if item['tvshow']:
         num_of_subs,subtitle,subtitle_list=search_tvshow(item['tvshow'], item['season'], item['episode'], lang, filename,mode_subtitle)
     elif item['title'] and item['year']:
-        #myLogger('movie Subscene')
+        #logger.debug('movie Subscene')
         num_of_subs,subtitle,subtitle_list=search_movie(item['title'], item['year'], lang, filename,mode_subtitle)
     elif item['title']:
         num_of_subs,subtitle,subtitle_list=search_filename(item['title'], lang,mode_subtitle)
@@ -304,13 +304,13 @@ def search_tvshow(tvshow, season, episode, languages, filename,mode_subtitle):
 
     if content is not None:
         log(__name__, "Multiple tv show seasons found, searching for the right one ...")
-        myLogger('AAAAAAAAAAAA1 %s | %s | %s' %(content, tvshow, seasons[int(season)]))
+        logger.debug('AAAAAAAAAAAA1 %s | %s | %s' %(content, tvshow, seasons[int(season)]))
         tv_show_seasonurl = find_tv_show_season(content, tvshow, seasons[int(season)])
         if tv_show_seasonurl is not None:
             log(__name__, "Tv show season found in list, getting subs ...")
             url = main_url + tv_show_seasonurl
             epstr = "%d:%d" % (int(season), int(episode))
-            myLogger('search tv')
+            logger.debug('search tv')
             num_of_subs,subtitle,subtitle_list=getallsubs(url, languages,mode_subtitle,filename, epstr)
     return num_of_subs,subtitle,subtitle_list
 def search_manual(searchstr, languages, filename,mode_subtitle):
@@ -339,11 +339,11 @@ def search_filename(filename, languages,mode_subtitle):
 
 def search_movie(title, year, languages, filename,mode_subtitle):
     title = prepare_search_string(title)
-    #myLogger(title)
+    #logger.debug(title)
     #log(__name__, "Search movie = %s" % title)
     url = main_url + "/subtitles/title?q=" + que(title) + '&r=true'
     content, response_url = geturl(url)
-    #myLogger(url)
+    #logger.debug(url)
     subtitle=' '
     num_of_subs=0
     subtitle_list=''
@@ -353,9 +353,9 @@ def search_movie(title, year, languages, filename,mode_subtitle):
         if subspage_url is not None:
             log(__name__, "Movie found in list, getting subs ...")
             url = main_url + subspage_url
-            #myLogger('search movie')
+            #logger.debug('search movie')
             num_of_subs,subtitle,subtitle_list=getallsubs(url, languages,mode_subtitle,filename)
-            #myLogger(url)
+            #logger.debug(url)
         else:
             log(__name__, "Movie not found in list: %s" % title)
             if string.find(string.lower(title), "&") > -1:
@@ -365,7 +365,7 @@ def search_movie(title, year, languages, filename,mode_subtitle):
                 if subspage_url is not None:
                     log(__name__, "Movie found in list, getting subs ...")
                     url = main_url + subspage_url
-                    #myLogger('search None')
+                    #logger.debug('search None')
                     num_of_subs,subtitle,subtitle_list=getallsubs(url, languages,mode_subtitle, filename)
                 else:
                     log(__name__, "Movie not found in list: %s" % title)
@@ -422,17 +422,17 @@ def getallsubs(url, allowed_languages,mode_subtitle, filename="", episode=""):
                         "<td class=\"[^\"]+\">\s+(?P<numfiles>[^\r\n\t]*)\s+</td>\s+"
                         "<td class=\"(?P<hiclass>[^\"]+)\">"
                         "(?:.*?)<td class=\"a6\">\s+<div>\s+(?P<comment>[^\"]+)&nbsp;\s*</div>")
-    #myLogger('codes2')
+    #logger.debug('codes2')
     codes = get_language_codes(allowed_languages)
-    #myLogger(codes)
-    #myLogger('codes')
+    #logger.debug(codes)
+    #logger.debug('codes')
     if len(codes) < 1:
 
         xbmc.executebuiltin((u'Notification(%s,%s)' % (__scriptname__, __language__(32004))).encode('utf-8'))
         return
     log(__name__, 'LanguageFilter='+','.join(codes))
     content, response_url = geturl(url, 'LanguageFilter='+','.join(codes))
-    #myLogger(url)
+    #logger.debug(url)
 
     if content is None:
         return

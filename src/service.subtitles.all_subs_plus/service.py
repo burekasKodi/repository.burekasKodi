@@ -27,11 +27,11 @@ import requests
 try:
     import HTMLParser
     html_parser = HTMLParser.HTMLParser()
-    from urllib import urlretrieve
+    #from urllib import urlretrieve
     from urllib import unquote_plus, unquote, urlopen, quote
 except:
     import html
-    from urllib.request import urlretrieve
+    #from urllib.request import urlretrieve
     from urllib.parse import  unquote_plus, unquote, quote, quote_plus
 
 
@@ -39,14 +39,14 @@ from unicodedata import normalize
 
 from srt2ass import srt2ass
 
-from wizdom_api.wizdom import GetWizJson,wizdom_download_sub
-from ktuvit_api.ktuvit import GetKtuvitJson,ktuvit_download_sub
+from wizdom_api.wizdom import GetWizJson, wizdom_download_sub
+from ktuvit_api.ktuvit import GetKtuvitJson, ktuvit_download_sub
 from subscene_api import SubtitleAPI
 from opensubs_api.opensubtitle import GetOpenSubtitlesJson,Download_opensubtitle
 from local_api.local import GetLocalJson
 #from aa_subs_api.aa_subs import aa_subs, Download_aa
 
-from myLogger import myLogger
+from myLogger import logger
 
 KODI_VERSION = int(xbmc.getInfoLabel("System.BuildVersion").split('.', 1)[0])
 if KODI_VERSION<=18:
@@ -128,7 +128,7 @@ class dialogprogres:
 socket.setdefaulttimeout(10)
 action=None
 searchstring=None
-myLogger('Subs On')
+logger.debug('Subs On')
 all_setting = []
 location=0
 last_sub_download=''
@@ -323,7 +323,8 @@ def PrintException():
     linecache.checkcache(filename)
     line = linecache.getline(filename, lineno, f.f_globals)
     try:
-        myLogger('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj), logLevel=xbmc.LOGERROR)
+        msg = 'EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj)
+        logger.error(msg)
         return "Error"
     except:
         return "Error"
@@ -441,7 +442,7 @@ def getTVshowOriginalTitleByJSONandDBid(source="notPlaying"): ###### burekas
         return originalShowTitle
 
     except Exception as err:
-        myLogger('Caught Exception: error getTVshowOriginalTitleByJSONandDBid: %s' % format(err), logLevel=xbmc.LOGERROR)
+        logger.error('Caught Exception: error getTVshowOriginalTitleByJSONandDBid: %s' % format(err))
         originalShowTitle = ''
         return originalShowTitle
 
@@ -467,7 +468,7 @@ def getTVshowOriginalTitleByTMDBapi(source="notPlaying"): ###### burekas
             #url = "http://api.tmdb.org/3/search/%s?api_key=%s&query=%s&language=en" % ("tv",tmdbKey, labelTVShowTitle)
             url = "http://api.themoviedb.org/3/search/%s?api_key=%s&query=%s&language=en" % ("tv",tmdbKey, labelTVShowTitle)
 
-        myLogger("searchTMDB for original tv title: %s" % url)
+        logger.debug("searchTMDB for original tv title: %s" % url)
 
         json_results = get_TMDB_data_popularity_and_votes_sorted(url,filename)
 
@@ -493,13 +494,13 @@ def getTVshowOriginalTitleByTMDBapi(source="notPlaying"): ###### burekas
 
         try:    originalTitle = json_results[0]["name"]
         except Exception as e:
-            myLogger( "[%s]" % (e,))
+            logger.debug( "[%s]" % (e,))
             return ''
 
         return originalTitle
 
     except Exception as err:
-        myLogger('Caught Exception: error searchTMDB: %s' % format(err), logLevel=xbmc.LOGERROR)
+        logger.error('Caught Exception: error searchTMDB: %s' % format(err))
         originalTitle = ''
         return originalTitle
 
@@ -509,33 +510,44 @@ def lowercase_with_underscores(_str):   ####### burekas
     #return normalize('NFKD', str(str(str, 'utf-8'))).encode('utf-8', 'ignore')
 
 def caching_json(filename, url):   ####### burekas
+    logger.debug("caching_json() called")
+    logger.debug("  - filename: " + filename)
+    logger.debug("  - url: " + url)
 
-    if (MyAddon.getSetting( "json_cache" ) == "true"):
-        json_file = path.join(__temp__, filename)
-        if not path.exists(json_file) or not path.getsize(json_file) > 20 or (time.time()-path.getmtime(json_file) > 30*60):
-            data = requests.get(url, verify=False, timeout=60)   #timeout = 60 seconds
-            open(json_file, 'wb').write(data.content)
-        if path.exists(json_file) and path.getsize(json_file) > 20:
-            with open(json_file,'r',encoding='utf-8') as json_data:
-                json_object = json.load(json_data)
-            return json_object
-        else:
-            return {}
+    isjsonsettings = MyAddon.getSetting("json_cache")
+    logger.debug("isjson = " + isjsonsettings)
 
-    else:
-        try:
-          json_object = requests.get(url, timeout=60).json()
-        except:
-          json_object = {}
-          pass
-        return json_object
+    json_file = path.join(__temp__, filename)
+
+    # try loading the cache from json if applicable
+    if "true" == isjsonsettings:
+        if path.exists(json_file):
+            if path.getsize(json_file) > 20:
+                time_diff = time.time() - path.getmtime(json_file)
+                
+                # allow max cache time of 30 min
+                if time_diff < 30*60:
+                    logger.debug("loading json from file: "  + json_file)
+                    json_object = json.load(json_file)
+                    return json_object
+        
+    logger.debug("requests.get : "  + url)
+    data = requests.get(url, verify = False, timeout=60)   #timeout = 60 seconds
+
+    # try storing the json cache if applicable
+    if "true" == isjsonsettings:
+        logger.debug("storing json to file: "  + json_file)
+        with open(json_file, 'wb') as f:
+            f.write(data.content)
+    
+    return data.json()
 
 
 def download_manager(mode_subtitle, id):
-    myLogger("download_manager - source: %s" %(source))
-    myLogger("download_manager - id: %s" %(id))
-    myLogger("download_manager - mode: %s" %(mode_subtitle))
-    myLogger("download_manager - filename: %s" %(filename))
+    logger.debug("download_manager - source: %s" %(source))
+    logger.debug("download_manager - id: %s" %(id))
+    logger.debug("download_manager - mode: %s" %(mode_subtitle))
+    logger.debug("download_manager - filename: %s" %(filename))
 
     subs = []
     temp = ' '
@@ -558,7 +570,7 @@ def download_manager(mode_subtitle, id):
         subs, temp = download(id, language, thumbLang, sub_link, filename, mode_subtitle)
 
     # elif source=='aa_subs':
-    #     myLogger('AA SUBS DOWNLOAD')
+    #     logger.debug('AA SUBS DOWNLOAD')
     #     subs = Download_aa(params["link"],mode_subtitle)
 
     else:
@@ -568,16 +580,16 @@ def download_manager(mode_subtitle, id):
         #         subs=subs[0]
         # except:
         #     pass
-        myLogger("download_manager - temp: %s" % temp)
+        logger.debug("download_manager - temp: %s" % temp)
 
-    myLogger("download_manager - subs: %s" % subs)
+    logger.debug("download_manager - subs: %s" % subs)
     return subs, temp
 
 def delete_junction(dir_path):
-    #myLogger(repr(xbmcvfs.exists(dir_path)))
+    #logger.debug(repr(xbmcvfs.exists(dir_path)))
     if path.exists(dir_path):
         try:
-            myLogger("delete_junction: " + repr(dir_path))
+            logger.debug("delete_junction: " + repr(dir_path))
 
             for root, dirs, files in os.walk(dir_path, topdown=False):
                 try:
@@ -605,7 +617,7 @@ def delete_junction(dir_path):
             #     except Exception as e:
             #         pass
         except Exception as e:
-            myLogger("delete_junction Error: " + repr(e))
+            logger.debug("delete_junction Error: " + repr(e))
 
 def remove_and_generate_directory(dir_path):
     delete_junction(dir_path)
@@ -623,7 +635,7 @@ def remove_and_generate_temp_subs_directories(fromZip):
             xbmcvfs.mkdirs(MyZipFolder2)
             xbmcvfs.mkdirs(MySubFolder2)
     except Exception as e:
-        myLogger("remove_and_generate_temp_subs_directories Error: " + repr(e))
+        logger.debug("remove_and_generate_temp_subs_directories Error: " + repr(e))
 
 
 def download(id, language, thumbLang, sub_link, filename, mode_subtitle):
@@ -633,7 +645,7 @@ def download(id, language, thumbLang, sub_link, filename, mode_subtitle):
     except:
         from zipfile import ZipFile
 
-    myLogger("download() : language=%s | thumbLang=%s | sub_link=%s | filename=%s | mode_subtitle=%s | id=%s"
+    logger.debug("download() : language=%s | thumbLang=%s | sub_link=%s | filename=%s | mode_subtitle=%s | id=%s"
              % (language, thumbLang, sub_link, filename, mode_subtitle, id))
 
     try:
@@ -683,7 +695,7 @@ def download(id, language, thumbLang, sub_link, filename, mode_subtitle):
 
             else:
                 #archive_file = path.join(MyZipFolder, 'other.sub.'+id+'.zip')
-                myLogger('ERROR IN Download: Unknown source - ' + id , logLevel=xbmc.LOGERROR)
+                logger.error('ERROR IN Download: Unknown source - ' + id)
                 if mode_subtitle>1:
                     return '',False
                 else:
@@ -705,8 +717,8 @@ def download(id, language, thumbLang, sub_link, filename, mode_subtitle):
                 with zipfile.ZipFile(archive_file, 'r') as zip_ref:
                     zip_ref.extractall(MySubFolder)
 
-            myLogger("archive_file: " + repr(archive_file))
-            myLogger("MySubFolder: " + repr(listdir(MySubFolder)))
+            logger.debug("archive_file: " + repr(archive_file))
+            logger.debug("MySubFolder: " + repr(listdir(MySubFolder)))
             for file_ in listdir(MySubFolder)[1]:
                 ufile = file_
                 file_ = path.join(MySubFolder, ufile)
@@ -734,8 +746,9 @@ def download(id, language, thumbLang, sub_link, filename, mode_subtitle):
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, f.f_globals)
 
-        myLogger('ERROR IN Download:'+str(lineno)+',Error:'+str(e), logLevel=xbmc.LOGERROR)
-        notify2('[COLOR red] Error: [/COLOR]'+str(lineno)+' E:'+str(e),all_setting)
+        msg = 'ERROR IN Download:' + str(lineno) + ', Error:' + str(e)
+        logger.error(msg)
+        notify2('[COLOR red] Error: [/COLOR]' + str(lineno) + ' E:' + str(e), all_setting)
 
     if mode_subtitle>1:
         return '', False
@@ -749,14 +762,14 @@ def rename_sub_filename_with_language_prefix(old_filename, dir, lang):
 
     try:
         old_full_path_filename = path.join(dir, old_filename)
-        myLogger("Rename filename: " + repr(old_full_path_filename))
+        logger.debug("Rename filename: " + repr(old_full_path_filename))
 
         parts = old_filename.split('.')
         parts.insert(-1, lang)
         new_filename = '.'.join(parts)
 
         new_full_path_filename = path.join(dir, new_filename)
-        myLogger("To this filename: " + repr(new_full_path_filename))
+        logger.debug("To this filename: " + repr(new_full_path_filename))
 
         _filename = ''
         if os.path.isfile(old_full_path_filename):
@@ -765,10 +778,10 @@ def rename_sub_filename_with_language_prefix(old_filename, dir, lang):
         else:
             _filename = old_full_path_filename
 
-        myLogger("Filename is: " + repr(_filename))
+        logger.debug("Filename is: " + repr(_filename))
         return _filename;
     except Exception as e:
-        myLogger("Renaming Error: " + repr(e), logLevel=xbmc.LOGERROR)
+        logger.error("Renaming Error: " + repr(e))
         return old_full_path_filename
 
 
@@ -795,7 +808,7 @@ def getParams(paramsstr):
 def Wizdom_Search(imdb, season=0, episode=0, version=0):
     global links_wizdom
 
-    subtitle_list,json_object = GetWizJson(imdb,prefix_wizdom,color_wizdom,season,episode,version)
+    subtitle_list, json_object = GetWizJson(imdb, prefix_wizdom, color_wizdom, season, episode, version)
 
     links_wizdom = subtitle_list
 
@@ -803,11 +816,12 @@ def Wizdom_Search(imdb, season=0, episode=0, version=0):
 
 #///////////////////////////////////////Ktuvit////////////////////////////////////////////////
 def Ktuvit_Search(item, imdb_id):
+    # import web_pdb; web_pdb.set_trace() # debug localhost:5555
     global links_ktuvit
 
     parse_rls_title(item)
 
-    myLogger("Ktuvit_Search item:" + repr(item))
+    logger.debug("Ktuvit_Search item:" + repr(item))
 
     subtitle_list, m_pre = GetKtuvitJson(item, imdb_id, prefix_ktuvit, color_ktuvit)
 
@@ -820,7 +834,7 @@ def Ktuvit_Search(item, imdb_id):
 def Search_Opensubtitle(item, imdb_id, mode_subtitle, all_setting):
     global links_open
 
-    myLogger("Search_Opensubtitle item:" + repr(item))
+    logger.debug("Search_Opensubtitle item:" + repr(item))
 
     saved_data, search_data = GetOpenSubtitlesJson(item,
                                                    imdb_id,
@@ -838,7 +852,7 @@ def Search_Opensubtitle(item, imdb_id, mode_subtitle, all_setting):
 def Subscene_Search(item,imdb_id):
     global links_subscene
 
-    myLogger("Subscene_Search item:" + repr(item))
+    logger.debug("Subscene_Search item:" + repr(item))
 
     subtitle_list, result = subscene.GetSubsceneJson(imdb_id,
                                                      item,
@@ -853,7 +867,7 @@ def Subscene_Search(item,imdb_id):
 def Local_Search(item, all_setting):
     global links_local
 
-    myLogger("Local_Search item:" + repr(item))
+    logger.debug("Local_Search item:" + repr(item))
 
     subtitle_list = GetLocalJson(item, prefix_local, color_local, all_setting)
 
@@ -866,7 +880,7 @@ def Local_Search(item, all_setting):
 def aa_subs_Search(item,mode_subtitle):
     global links_subcenter
 
-    myLogger("ACat_Search item:" + repr(item))
+    logger.debug("ACat_Search item:" + repr(item))
 
     subtitle_list,result = aa_subs(item,mode_subtitle,prefix_acat,color_acat)
 
@@ -877,7 +891,7 @@ def aa_subs_Search(item,mode_subtitle):
 
 
 def clean_title(item):
-    myLogger("search_all: clean_title - title before: " + repr(item["title"]))
+    logger.debug("search_all: clean_title - title before: " + repr(item["title"]))
 
     try:
         temp=re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", item["title"])
@@ -927,7 +941,7 @@ def clean_title(item):
         item["tvshow"] = re.sub(r'\([^\)]+\)\W*$', '', item["tvshow"]).strip()
 
     except Exception as e:
-        myLogger("clean_title Error: " + repr(e))
+        logger.debug("clean_title Error: " + repr(e))
 
 
 def parse_rls_title(item):
@@ -946,14 +960,14 @@ def parse_rls_title(item):
         item["tvshow"] = regexHelper.sub(' ', title).strip()
         item["season"] = str(int(season))
         item["episode"] = str(int(episode))
-        myLogger("TV Parsed Item: %s" % (item,))
+        logger.debug("TV Parsed Item: %s" % (item,))
 
 def get_more_data(now_play_data, titleBefore):
-    myLogger("get_more_data - filename: " + repr(now_play_data['file']))
-    myLogger("get_more_data - titleBefore: : " + repr(titleBefore))
+    logger.debug("get_more_data - filename: " + repr(now_play_data['file']))
+    logger.debug("get_more_data - titleBefore: : " + repr(titleBefore))
 
     title, year = xbmc.getCleanMovieTitle(now_play_data['file'])
-    myLogger("CleanMovieTitle: title - %s, year - %s " %(title, year))
+    logger.debug("CleanMovieTitle: title - %s, year - %s " %(title, year))
 
     tvshow=' '
     season=0
@@ -973,7 +987,7 @@ def get_more_data(now_play_data, titleBefore):
     for pattern in patterns:
         pattern = r'%s' % pattern
         match = re.search(pattern, now_play_data['file'], flags=re.IGNORECASE)
-        myLogger("regex match: " + repr(match))
+        logger.debug("regex match: " + repr(match))
 
         if match is None:
             continue
@@ -981,7 +995,7 @@ def get_more_data(now_play_data, titleBefore):
         title = title[:match.start('season') - 1].strip()
         season = match.group('season').lstrip('0')
         episode = match.group('episode').lstrip('0')
-        myLogger("regex parse: title = %s , season = %s, episode = %s " %(title,season,episode))
+        logger.debug("regex parse: title = %s , season = %s, episode = %s " %(title,season,episode))
 
         break
 
@@ -1029,7 +1043,7 @@ def download_next(location, all_setting, last_sub_download, save_all_data, max_s
 
         if x == value_for_subs :
             notify2('Downloading', all_setting)
-            myLogger('source DOWNLOAD: ' + source)
+            logger.debug('source DOWNLOAD: ' + source)
 
             subs, temp = download_manager(1, id)
 
@@ -1117,7 +1131,7 @@ def set_providers_colors():
     color_result_counter = cCustomCounter if cCounter == custom else cCounter
     '''
 
-    myLogger("Colors: color_wizdom=%s | color_ktuvit=%s | color_open=%s | color_subscene=%s | color_local=%s" %(color_wizdom,color_ktuvit,color_open,color_subscene,color_local))
+    logger.debug("Colors: color_wizdom=%s | color_ktuvit=%s | color_open=%s | color_subscene=%s | color_local=%s" %(color_wizdom,color_ktuvit,color_open,color_subscene,color_local))
 
 settings_list = {"Email":MyAddon.getSetting("Email"),
                  "Password":MyAddon.getSetting("Password"),
@@ -1204,8 +1218,8 @@ def refresh_setting():
 if not exists(MyTmp):
     xbmcvfs.mkdirs(MyTmp)
 
-myLogger("sys.argv: %s" % repr(sys.argv))
-myLogger("sys.argv len: %s" % str(len(sys.argv)))
+logger.debug("sys.argv: %s" % repr(sys.argv))
+logger.debug("sys.argv len: %s" % str(len(sys.argv)))
 
 params = dictparams()
 if len(sys.argv) >= 2:
@@ -1214,8 +1228,8 @@ if len(sys.argv) >= 2:
 action = params.set_cleaned_default("action", "autosub")
 searchstring = params.set_cleaned_default("searchstring", "")
 
-myLogger("Version:%s" % MyVersion)
-myLogger("Action:%s" % action)
+logger.debug("Version:%s" % MyVersion)
+logger.debug("Action:%s" % action)
 
 language = params.get("language", "")
 thumbLang = params.get("thumbLang", "")
@@ -1243,7 +1257,7 @@ if len(all_setting["other_lang"]) > 0:
     all_lang = all_setting["other_lang"].split(",")
     for items in all_lang:
         selected_langs.append(str(items))
-myLogger('Langs: ' + repr(selected_langs))
+logger.debug('Langs: ' + repr(selected_langs))
 subscene = SubtitleAPI(*selected_langs) # pass languages you want to have in results
 
 def similar(w1, w2):
@@ -1264,7 +1278,7 @@ def download_subs(link):
     subformat = params.get("subformat", "")
     source = params.get("source", "")
 
-    myLogger('source ==' + source)
+    logger.debug('source ==' + source)
 
     subs,temp = download_manager(3, id)
 
@@ -1316,7 +1330,7 @@ def translate_subs(input_file,output_file,mode_subtitle):
         rawdata = f.read()
 
     encoding=chardet.detect(rawdata)['encoding']
-    myLogger('encoding:'+encoding)
+    logger.debug('encoding: ' + encoding)
 
     text=rawdata
 
@@ -1386,9 +1400,9 @@ def searchTMDB(type, query, year):
 
     json = requests.get(url, timeout=60).json()
     json_results = json["results"]
-    myLogger("searchTMDB: json_results - " + repr(json_results))
+    logger.debug("searchTMDB: json_results - " + repr(json_results))
     json_results.sort(key = lambda x:x["popularity"], reverse=True)
-    myLogger("searchTMDB: json_results sorted - " + repr(json_results))
+    logger.debug("searchTMDB: json_results sorted - " + repr(json_results))
     try:
         tmdb_id = int(json_results[0]["id"])
     except Exception as err:
@@ -1402,7 +1416,7 @@ def searchTMDB(type, query, year):
         imdb_id = json["imdb_id"]
     except Exception:
         return '000'
-    myLogger('Searching TMDB Found:'+imdb_id)
+    logger.debug('Searching TMDB Found:'+imdb_id)
     return imdb_id
 
 def checkAndParseIfTitleIsTVshowEpisode(manualTitle):  ##### burekas
@@ -1430,41 +1444,50 @@ def checkAndParseIfTitleIsTVshowEpisode(manualTitle):  ##### burekas
         return [tempShow, tempSnum, tempEnum, 'episode']
 
     except Exception as err:
-        myLogger( "checkAndParseIfTitleIsTVshowEpisode error: '%s'" % err)
+        logger.debug( "checkAndParseIfTitleIsTVshowEpisode error: '%s'" % err)
         return ["NotTVShowEpisode", "0", "0",'']
 
 def get_TMDB_data_popularity_and_votes_sorted(url,filename):    ##### burekas
-    myLogger("searchTMDB: %s" % url)
+    logger.debug("searchTMDB: %s" % url)
     json = caching_json(filename,url)
     json_results = json["results"]
-    myLogger("searchTMDB: json_results - " + repr(json_results))
+    logger.debug("searchTMDB: json_results - " + repr(json_results))
+
     json_results.sort(key = lambda x:x["popularity"], reverse=True)
     json_results.sort(key = lambda x:x["vote_count"], reverse=True)
-    myLogger("searchTMDB: json_results sorted - " + repr(json_results))
+    logger.debug("searchTMDB: json_results sorted - " + repr(json_results))
 
     return json_results
 
-def get_TMDB_data_filtered(url,filename,query,type):    ##### burekas
-    myLogger("searchTMDB: %s" % url)
-    myLogger("query filtered: %s" % query)
-    json = caching_json(filename,url)
+def get_TMDB_data_filtered(url, filename, query, _type):    ##### burekas
+    logger.debug("get_TMDB_data_filtered() called")
+    logger.debug("  - url: %s" % url)
+    logger.debug("  - filename: %s" % filename)
+    logger.debug("  - query: %s" % query)
+    logger.debug("  - type: %s" % _type)
+
+    json = caching_json(filename, url)
+
     json_results = json["results"]
-    myLogger("searchTMDB: json_results - " + repr(json_results))
-    if type=='tv':
+    logger.debug("searchTMDB: json_results - " + repr(json_results))
+
+    if _type == 'tv':
         json_results.sort(key = lambda x:x["name"]==query, reverse=True)
     else:
         json_results.sort(key = lambda x:x["title"]==query, reverse=True)
-    myLogger("searchTMDB: json_results sorted - " + repr(json_results))
+
+    logger.debug("searchTMDB: json_results sorted - " + repr(json_results))
 
     return json_results
 
 def getIMDB(title):    ##### burekas
-	myLogger("ManualSearch for title: %s" % title)
+	logger.debug("getIMDB called")
+	logger.debug("ManualSearch for title: %s" % title)
 
 	item = {}
 	item['tvshow'], item['season'], item['episode'], item['dbtype'] = checkAndParseIfTitleIsTVshowEpisode(title)
-	myLogger("Parse item tvshow result: " + item['tvshow'])
-	myLogger("ManualSearch for item: %s" % repr(item))
+	logger.debug("Parse item tvshow result: " + item['tvshow'])
+	logger.debug("ManualSearch for item: %s" % repr(item))
 
 	if item['tvshow'] == 'NotTVShowEpisode':
 		item['title'] = title
@@ -1477,7 +1500,7 @@ def getIMDB(title):    ##### burekas
 			if item['year'].isdigit():
 				if int(item['year']) > 1900:
 					item['imdb_id'] = searchForIMDBID(_query, item)
-					myLogger("item imdb_id %s" % (item['imdb_id']))
+					logger.debug("item imdb_id %s" % (item['imdb_id']))
 				else:
 					#item['year'] is not present a year
 					item['imdb_id'] = ''
@@ -1506,11 +1529,11 @@ def getIMDB(title):    ##### burekas
 			return 0
 
 	except Exception as err:
-		myLogger('Caught Exception: error in manual search: %s' % format(err))
+		logger.debug('Caught Exception: error in manual search: %s' % format(err))
 		pass
 
 def searchForIMDBID(query,item):  ##### burekas
-
+    logger.debug("searchForIMDBID called")
     year=item["year"]
     info=(PTN.parse(query))
     tmdbKey = '653bb8af90162bd98fc7ee32bcbbfb3d'
@@ -1519,27 +1542,22 @@ def searchForIMDBID(query,item):  ##### burekas
         type_search='tv'
         filename = 'subs.search.tmdb.%s.%s.%s.json'%(type_search,lowercase_with_underscores(item['tvshow']),year)
         url="https://api.tmdb.org/3/search/%s?api_key=%s&query=%s&language=en&append_to_response=external_ids"%(type_search,tmdbKey,quote_plus(item['tvshow']))
-          #url="https://api.tmdb.org/3/search/tv?api_key=%s&query=%s&year=%s&language=he&append_to_response=external_ids"%(tmdbKey,quote_plus(item['tvshow']),year)
-
-          #url='https://www.omdbapi.com/?apikey=8e4dcdac&t=%s&year=%s'%(item["tvshow"],item["year"])
-
-        #json_results = get_TMDB_data_popularity_and_votes_sorted(url,filename)
         json_results = get_TMDB_data_filtered(url,filename,item['tvshow'],type_search)
 
         try:
             tmdb_id = int(json_results[0]["id"])
         except Exception as e:
-            myLogger( "[%s]" % (e,))
+            logger.debug( "[%s]" % (e,))
             return 0
 
         filename = 'subs.search.tmdb.fulldata.%s.%s.json'%(type_search,tmdb_id)
         url = "https://api.tmdb.org/3/%s/%s?api_key=%s&language=en&append_to_response=external_ids"%(type_search,tmdb_id,tmdbKey)
-        myLogger("searchTMDB fulldata id: %s" % url)
+        logger.debug("searchTMDB fulldata id: %s" % url)
         json = caching_json(filename,url)
 
         try:    imdb_id = json['external_ids']["imdb_id"]
         except Exception as e:
-            myLogger( "[%s]" % (e,))
+            logger.debug( "[%s]" % (e,))
             return 0
 
         return imdb_id
@@ -1558,17 +1576,17 @@ def searchForIMDBID(query,item):  ##### burekas
         try:
             tmdb_id = int(json_results[0]["id"])
         except Exception as e:
-            myLogger( "[%s]" % (e,))
+            logger.debug( "[%s]" % (e,))
             return 0
 
         filename = 'subs.search.tmdb.fulldata.%s.%s.json'%(type_search,tmdb_id)
         url = "https://api.tmdb.org/3/%s/%s?api_key=%s&language=en&append_to_response=external_ids"%(type_search,tmdb_id,tmdbKey)
-        myLogger("searchTMDB fulldata id: %s" % url)
+        logger.debug("searchTMDB fulldata id: %s" % url)
         json = caching_json(filename,url)
 
         try:    imdb_id = json['external_ids']["imdb_id"]
         except Exception as e:
-            myLogger( "[%s]" % (e,))
+            logger.debug( "[%s]" % (e,))
             return 0
 
         return imdb_id
@@ -1577,13 +1595,13 @@ def is_local_file_tvshow(item):
     return item["title"] and (0 == int(item["year"]))
 
 def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
-    myLogger('getting subs')
+    logger.debug('getting subs')
 
     global links_wizdom, links_ktuvit, links_open, links_subscene, links_subcenter, links_local
 
     ########################################## Get IMDB ID ###############################################
-    myLogger("get_subtitles imdb_id: " + imdb_id)
-    myLogger('get_subtitles item: ' + repr(item))
+    logger.debug("get_subtitles imdb_id: " + imdb_id)
+    logger.debug('get_subtitles item: ' + repr(item))
 
     if mode_subtitle==3:
         dp = dialogprogres()
@@ -1598,7 +1616,7 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
             imdb_id_query = '{"jsonrpc": "2.0", "method": "Player.GetItem", "params": {"playerid": ' + str(playerid) + ', "properties": ["imdbnumber"]}, "id": 1}'
             imdb_id = json.loads(xbmc.executeJSONRPC (imdb_id_query))['result']['item']['imdbnumber']
 
-            myLogger("imdb JSONRPC:%s" %imdb_id)
+            logger.debug("imdb JSONRPC:%s" %imdb_id)
 
     except:    pass
 
@@ -1610,37 +1628,41 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
     else:
         notify2(' מחפש מספר IMDB '+imdb_id,all_setting)
 
-    myLogger('get_subtitles: initial imdb_id is ' + imdb_id)
+    logger.debug('get_subtitles: initial imdb_id is ' + imdb_id)
 
     try:
-        myLogger('get_subtitles item: ' + repr(params.params))
+        logger.debug('get_subtitles item: ' + repr(params.params))
 
         if not imdb_id[:2]=="tt":
             if item["tvshow"] or is_local_file_tvshow(item):
                 type_search = 'tv'
                 if item["tvshow"]:
-                    s_string=item["tvshow"]
+                    s_string = item["tvshow"]
+                    logger.debug("s_string: " + s_string)
                 else:
                     s_string = ("%s S%.2dE%.2d" % (item["title"], int(item["season"]), int(item["episode"])))
+                    logger.debug("s_string: " + s_string)
 
                 if (params.get('action') == 'manualsearch' or params.get('action') == 'autosub'):
                     if (item["tvshow"] and params.get('action') == 'manualsearch'):
                         s_string = ("%s S%.2dE%.2d" % (item["tvshow"], int(item["season"]), int(item["episode"])))
+                        logger.debug("s_string: " + s_string)
                     else:
                         s_string = ("%s S%.2dE%.2d" % (item["title"], int(item["season"]), int(item["episode"])))
-
+                        logger.debug("s_string: " + s_string)
 
             else:
                 type_search='movie'
                 s_string = ("%s %s" %(item["title"], str(item['year'])))
+                logger.debug("s_string: " + s_string)
 
-            myLogger('get_subtitles: search for a proper imdb_id - ' + s_string)
+            logger.debug('get_subtitles: search for a proper imdb_id - ' + s_string)
             imdb_id = getIMDB(s_string)
-            myLogger('get_subtitles: imdb_id that has been founded is ' + imdb_id)
+            logger.debug('get_subtitles: imdb_id that has been founded is ' + imdb_id)
 
     except Exception as e:
         imdb_id = 0
-        myLogger('get_subtitles: exception searching imdb_id: ' + imdb_id)
+        logger.debug('get_subtitles: exception searching imdb_id: ' + imdb_id)
         if mode_subtitle==3:
             dp.update(0, 'אנא המתן','imdb_id כשל ',  str(e) )
         else:
@@ -1650,7 +1672,7 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
     #if 'tt' not in str(imdb_id)
     if not imdb_id[:2]=="tt":
         imdb_id = 0
-        myLogger('get_subtitles: imdb_id has not been founded - ' + imdb_id)
+        logger.debug('get_subtitles: imdb_id has not been founded - ' + imdb_id)
     else:
         if mode_subtitle==3:
             dp.update(0, 'אנא המתן', 'נמצא ', imdb_id)
@@ -1660,20 +1682,21 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
 
     save_all_data=[]
     threads=[]
-    myLogger('get_subtitles: using imdb_id ' +imdb_id+ ' for subtitles searching ')
+    logger.debug('get_subtitles: using imdb_id ' +imdb_id+ ' for subtitles searching ')
 
     if all_setting["wizset"]== 'true':
-        threads.append(Thread(Wizdom_Search,imdb_id,item["season"],item["episode"],item['file_original_path']))
-        #num_of_subs,subtitle,subtitle_list=Wizdom_Search(imdb_id,mode_subtitle,0,0,item['file_original_path'])
+        threads.append(Thread(Wizdom_Search, imdb_id, item["season"], item["episode"], item['file_original_path']))
+
     if all_setting["ktuvitset"]== 'true':# Ktuvit Search
-        threads.append(Thread(Ktuvit_Search,item,imdb_id))
-        #num_of_subs,subtitle,saved_data=Ktuvit_Search(item,mode_subtitle,imdb_id)
+        threads.append(Thread(Ktuvit_Search, item, imdb_id))
+
+
     if all_setting["opensubtitle"]== 'true':# Opensubtitle Search
-        threads.append(Thread(Search_Opensubtitle,item,imdb_id,mode_subtitle,all_setting))
+        threads.append(Thread(Search_Opensubtitle, item, imdb_id, mode_subtitle, all_setting))
+
     if all_setting["subscene"]== 'true':
         threads.append(Thread(Subscene_Search,item,imdb_id))
-        #threads.append(Thread(Subscene_Search,item,mode_subtitle))
-        #num_of_subs,subtitle,saved_data=search_subscene(item,mode_subtitle)
+
     '''
     if all_setting["aa_subs"]== 'true':# Subcenter Search
         threads.append(Thread(aa_subs_Search,item,mode_subtitle))
@@ -1684,13 +1707,10 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
     '''
 
     if all_setting["storage_en"]=='true' and len(all_setting["storage"])>0:# Local
-        threads.append(Thread(Local_Search,item,all_setting))
-        #num_of_subs,subtitle,saved_data=Local_Search,item,all_setting)
-
+        threads.append(Thread(Local_Search, item, all_setting))
 
     for td in threads:
         td.start()
-
 
     tt={}
     for i in range (0,40):
@@ -1720,7 +1740,7 @@ def get_subtitles(item, mode_subtitle, imdb_id, all_setting):
             string_dp += prefix_wizdom.upper()+ ':[COLOR %s]%s[/COLOR] ' % (tt[zz], len(links_wizdom))
             zz += 1
         if all_setting["ktuvitset"]== 'true':
-            #myLogger('links_ktuvit out:'+str(len(links_ktuvit)))
+            #logger.debug('links_ktuvit out:'+str(len(links_ktuvit)))
             string_dp += prefix_ktuvit.upper() + ':[COLOR %s]%s[/COLOR] ' % (tt[zz], len(links_ktuvit))
             zz += 1
         if all_setting["opensubtitle"]== 'true':
@@ -1874,7 +1894,7 @@ def autosubs_download_first_sub(all_data,mode_subtitle,all_setting,save_all_data
             subtitle_cache_next().set('last_sub', last_sub_download)
             notify3('[COLOR aqua]כתובית מוכנה[/COLOR]',2)
 
-            myLogger("AutoSub sub ready: " + repr(subs))
+            logger.debug("AutoSub sub ready: " + repr(subs))
 
             # listitem = xbmcgui.ListItem(label          = label,
             #                             label2         = label2
@@ -1984,8 +2004,8 @@ def start_tranlate_sub(subs_to_translate,mode_subtitle):
         translated_sub_path = os.path.join(__last__, "trans.srt")
         translate_subs(subs_to_translate,translated_sub_path,mode_subtitle)
     except Exception as e:
-        myLogger('e' + str(mode_subtitle))
-        myLogger(e, logLevel = xbmc.LOGERROR)
+        logger.debug('e' + str(mode_subtitle))
+        logger.error(e)
         pass
 
     return translated_sub_path
@@ -1994,7 +2014,7 @@ def search_all(mode_subtitle,all_setting,manual_search=False,manual_title=''):
     global links_wizdom,links_subcenter,links_local,links_ktuvit,links_open,imdbid
     running=1
 
-    myLogger("search_all: mode_subtitle - " + repr(mode_subtitle))
+    logger.debug("search_all: mode_subtitle - " + repr(mode_subtitle))
 
     if mode_subtitle==3:
         dp = dialogprogres()
@@ -2019,7 +2039,7 @@ def search_all(mode_subtitle,all_setting,manual_search=False,manual_title=''):
     ########################################## Get Item Data ###############################################
 
     if manual_search:
-        myLogger("search_all: manual_search")
+        logger.debug("search_all: manual_search")
         item, d_value_s, d_value_e = get_manual_search_item_data(item, manual_title)
         if d_value_s == 0 or d_value_e == 0:
             return 0
@@ -2070,10 +2090,10 @@ def search_all(mode_subtitle,all_setting,manual_search=False,manual_title=''):
 
     dd=[]
     dd.append((item, mode_subtitle, imdb_id, all_setting))
-    myLogger('dd::: %s' %(dd))
+    logger.debug('dd::: %s' %(dd))
 
     try:
-        #save_all_data,imdb_id,dont_save=get_subtitles(item,mode_subtitle,imdb_id,all_setting)
+        #save_all_data, imdb_id, dont_save = get_subtitles(item,mode_subtitle,imdb_id,all_setting)
         save_all_data, imdb_id, dont_save = cache.get(get_subtitles,
                                                       24,
                                                       item,
@@ -2082,7 +2102,7 @@ def search_all(mode_subtitle,all_setting,manual_search=False,manual_title=''):
                                                       all_setting,
                                                       table='subs')
     except:
-        myLogger('Error')
+        logger.debug('Error')
         save_all_data = []
         imdb_id = 't00'
         dont_save = 0
@@ -2163,55 +2183,46 @@ def get_manual_search_item_data(item,manual_title):
             item['episode']='0'
             #isItMovie=True
             #isItEpisode=False
-            d_value_y = dialog.input('הכנס שנה', type=xbmcgui.INPUT_NUMERIC)
+            d_value_y = dialog.input('הכנס שנה', type = xbmcgui.INPUT_NUMERIC)
             item['year'] = str(d_value_y)
             d_value_s = -1
             d_value_e = -1
         else:
             item['tvshow']=manual_title
             dialog = xbmcgui.Dialog()
-            d_value_s = dialog.input('הכנס עונה', type=xbmcgui.INPUT_NUMERIC)
+            d_value_s = dialog.input('הכנס עונה', type = xbmcgui.INPUT_NUMERIC)
             # if d==-1:
             #     return 0
             if d_value_s != 0:
-                item['season'] =str(d_value_s)
+                item['season'] = str(d_value_s)
             dialog = xbmcgui.Dialog()
-            d_value_e = dialog.input('הכנס פרק', type=xbmcgui.INPUT_NUMERIC)
+            d_value_e = dialog.input('הכנס פרק', type = xbmcgui.INPUT_NUMERIC)
             # if d==-1:
             #     return 0
             if d_value_e != 0:
-                item['episode'] =str(d_value_e)
+                item['episode'] = str(d_value_e)
             #isItMovie=False
             #isItEpisode=True
 
     return item, d_value_s, d_value_e
 
 def get_player_item_data(item):
-    try:
-        item['season'] = int(item['season'])
-    except:
-        item['season'] = ''
-    try:
-        item['episode'] = int(item['episode'])
-    except:
-        item['episode'] = ''
-
     item['year'] = xbmc.getInfoLabel("VideoPlayer.Year")  # Year
 
     item['season'] = str(xbmc.getInfoLabel("VideoPlayer.Season"))  # Season
     #if item['season']=='' or item['season']<1:
-    if item['season']=='' or str(item['season'])=='0':
+    if item['season'] == '' or item['season'] == '0':
         item['season'] = 0
 
     item['episode'] = str(xbmc.getInfoLabel("VideoPlayer.Episode"))  # Episode
     #if item['episode']=='' or item['episode']<1:
-    if item['episode']=='' or str(item['episode'])=='0':
+    if item['episode'] == '' or item['episode'] == '0':
         item['episode'] = 0
 
     #item['tvshow'] = normalizeString(xbmc.getInfoLabel("VideoPlayer.TVshowtitle"))  # Show
     item['tvshow'] = ''
 
-    if item['episode']==0:
+    if 0 == item['episode']:
         item['title'] = normalizeString(xbmc.getInfoLabel("VideoPlayer.OriginalTitle")).replace("%20"," ")  # no original title, get just Title
     else:
         #item['title'] = normalizeString(xbmc.getInfoLabel("VideoPlayer.TVshowtitle")).replace("%20"," ")  # Show
@@ -2256,7 +2267,7 @@ def get_non_player_item_data(item):
     item['temp'] = False
     item['rar'] = False
     item['full_path']=unquote(xbmc.getInfoLabel("ListItem.FileNameAndPath"))
-    # myLogger("DDDDDDDD "+ repr(xbmc.getInfoLabel("Container(20).ListItem.Label")))
+    # logger.debug("DDDDDDDD "+ repr(xbmc.getInfoLabel("Container(20).ListItem.Label")))
 
     if str(item['season'])=='' or str(item['season'])<str(1):
         item['season'] = 0
@@ -2568,13 +2579,13 @@ def end_sub_progress(sub,all_setting):
     addDirectoryItem(handle = int(sys.argv[1]), url = sub, listitem = listitem, isFolder=False)
 
 if action=='search1':
-    # import web_pdb; web_pdb.set_trace() #debug localhost:5555
+    # import web_pdb; web_pdb.set_trace() # debug localhost:5555
     search_all(3,(all_setting))
 
 
 elif action == 'manualsearch1':
-    # import web_pdb; web_pdb.set_trace() #debug localhost:5555
-    myLogger(params)
+    # import web_pdb; web_pdb.set_trace() # debug localhost:5555
+    logger.debug(params)
     #searchstring = getParam("searchstring", params)
     #search_all(3,(all_setting))
     #search_all(3,(all_setting),manual_search=True,manual_title=searchstring)
@@ -2583,8 +2594,7 @@ elif action == 'manualsearch1':
     #endOfDirectory(int(sys.argv[1]))
 
 elif action == 'download':
-
-    # import web_pdb; web_pdb.set_trace() #debug localhost:5555
+    # import web_pdb; web_pdb.set_trace() # debug localhost:5555
     id = params.get_cleaned("id")
 
     if id == 'open_setting' or id == 'clean' or id == 'keys' or id == 'disable_subs':
@@ -2602,7 +2612,7 @@ elif action == 'download':
                 xbmc.executebuiltin('RunScript(%s)' %(keymap_addon))
         '''
         elif action=='disable_subs':
-            myLogger("DISABLE")
+            logger.debug("DISABLE")
             xbmc.Player().showSubtitles(False)
             #xbmc.Player().setSubtitles("")
             listitem = ListItem(label="ww")
@@ -2617,7 +2627,7 @@ elif action == 'download':
 
     else:
         temp=' '
-        myLogger("Download ID:%s" % id)
+        logger.debug("Download ID:%s" % id)
 
         subs, temp = download_manager(3,id)
 
@@ -2650,7 +2660,7 @@ elif action=='clean':
 
 '''
 elif action=='disable_subs':
-    myLogger("DISABLE")
+    logger.debug("DISABLE")
     xbmc.Player().showSubtitles(False)
     #xbmc.Player().setSubtitles("")
     listitem = ListItem(label="a")
@@ -2664,7 +2674,7 @@ elif action=='clear_aa':
      xbmc.executebuiltin((u'Notification(%s,%s)' % (__scriptname__, __language__(32004))))
 
 elif action=='export':
-    myLogger("export")
+    logger.debug("export")
     addonInfo = MyAddon.getAddonInfo
     dataPath = xbmc_translate_path(addonInfo('profile')).decode('utf-8')
     cacheFile = os.path.join(dataPath, 'subs_history.db')

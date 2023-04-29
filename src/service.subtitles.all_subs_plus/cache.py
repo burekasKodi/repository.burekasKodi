@@ -22,7 +22,7 @@
 import re,hashlib,time,os,logging,sys
 
 import xbmc
-from myLogger import myLogger
+from myLogger import logger
 
 try:
     from sqlite3 import dbapi2 as database
@@ -46,25 +46,21 @@ def get(function, timeout, *args, **table):
         a = hashlib.md5()
         for i in args: a.update(str(i).encode('utf-8'))  ##### burekas
         a = str(a.hexdigest())
+
     except Exception as e:
-      
-      exc_type, exc_obj, tb = sys.exc_info()
-      fail = tb.tb_frame
-      lineno = tb.tb_lineno
-      filename = fail.f_code.co_filename
-      linecache.checkcache(filename)
-      line = linecache.getline(filename, lineno, fail.f_globals)
-      
-      myLogger('CACHE err:'+str(lineno), logLevel=xbmc.LOGERROR)
-      myLogger('inline:'+line, logLevel=xbmc.LOGERROR)
-      myLogger(e, logLevel=xbmc.LOGERROR)
-      
-     
-    
-      
-      pass
-    
-  
+        exc_type, exc_obj, tb = sys.exc_info()
+        fail = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = fail.f_code.co_filename
+        linecache.checkcache(filename)
+        line = linecache.getline(filename, lineno, fail.f_globals)
+
+        logger.error('CACHE err:' + str(lineno))
+        logger.error('inline:' + str(line))
+        logger.error(e)
+        pass
+
+
     try:
         table = table['table']
     except:
@@ -75,21 +71,20 @@ def get(function, timeout, *args, **table):
             import xbmcvfs
             addonInfo = xbmcaddon.Addon().getAddonInfo
             dataPath = xbmcvfs.translatePath(addonInfo('profile'))
+
         except:
-           
             dataPath = os.path.dirname(os.path.realpath(__file__))
+
         mypath=os.path.join(dataPath,'cache_f')
         if not os.path.exists(mypath):
           os.mkdir(mypath)
-    
-           
+
         dbcon = database.connect(os.path.join(mypath,'sources.db'))
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='%s';"%table)
         match = dbcur.fetchone()
 
         if match[0]!=0:
-        
             dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
             match = dbcur.fetchone()
             if match!=None:
@@ -100,7 +95,7 @@ def get(function, timeout, *args, **table):
                 update = (abs(t2 - t1) / 3600) >= int(timeout)
                 if update == False:
                     return response
-    
+
     except Exception as e:
         exc_type, exc_obj, tb = sys.exc_info()
         fail = tb.tb_frame
@@ -108,21 +103,23 @@ def get(function, timeout, *args, **table):
         filename = fail.f_code.co_filename
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, fail.f_globals)
-      
-        myLogger('CACHE2 err:'+str(lineno), logLevel=xbmc.LOGERROR)
-        myLogger('inline:'+line, logLevel=xbmc.LOGERROR)
-        myLogger(e, logLevel=xbmc.LOGERROR)
-        
+
+        logger.error('CACHE2 err:' + str(lineno))
+        logger.error('inline:' + str(line))
+        logger.error(e)
+
         pass
-    
+
     try:
+        logger.debug("calling function: " + str(function))
         r = function(*args)
+
         if (r == None or r == []) and not response == None:
-            
             return response
+
         elif (r == None or r == []):
-            
             return r
+
     except Exception as e:
         exc_type, exc_obj, tb = sys.exc_info()
         fail = tb.tb_frame
@@ -130,16 +127,16 @@ def get(function, timeout, *args, **table):
         filename = fail.f_code.co_filename
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, fail.f_globals)
-      
-        myLogger('CACHE3 err:'+str(lineno), logLevel=xbmc.LOGERROR)
-        myLogger('inline:'+line, logLevel=xbmc.LOGERROR)
-        myLogger(e, logLevel=xbmc.LOGERROR)
+
+        logger.error('CACHE3 err:' + str(lineno))
+        logger.error('inline:' + str(line))
+        logger.error(e)
         return
 
     try:
         r = repr(r)
         t = int(time.time())
-      
+
         dbcur.execute("CREATE TABLE IF NOT EXISTS %s (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");" % table)
         dbcur.execute("DELETE FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         dbcur.execute("INSERT INTO %s Values (?, ?, ?, ?)" % table, (f, a, r, t))
@@ -151,10 +148,10 @@ def get(function, timeout, *args, **table):
         filename = fail.f_code.co_filename
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, fail.f_globals)
-      
-        myLogger('CACHE4 err:'+str(lineno), logLevel=xbmc.LOGERROR)
-        myLogger('inline:'+line, logLevel=xbmc.LOGERROR)
-        myLogger(e, logLevel=xbmc.LOGERROR)
+
+        logger.error('CACHE4 err:' + str(lineno))
+        logger.error('inline:' + str(line))
+        logger.error(e)
         pass
 
     try:
@@ -166,16 +163,16 @@ def get(function, timeout, *args, **table):
         filename = fail.f_code.co_filename
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, fail.f_globals)
-      
-        myLogger('CACHE5 err:'+str(lineno), logLevel=xbmc.LOGERROR)
-        myLogger('inline:'+line, logLevel=xbmc.LOGERROR)
-        myLogger(e, logLevel=xbmc.LOGERROR)
+
+        logger.error('CACHE5 err:' + str(lineno))
+        logger.error('inline:' + str(line))
+        logger.error(e)
         pass
 
 
 def clear(table=None):
     try:
-        
+
 
         if table == None: table = ['rel_list']
         elif not type(table) == list: table = [table]
@@ -185,7 +182,7 @@ def clear(table=None):
             dataPath = xbmcvfs.translatePath(addonInfo('profile'))
         except:
             dataPath = os.path.dirname(os.path.realpath(__file__))
-       
+
         mypath=os.path.join(dataPath,'cache_f')
         if not os.path.exists(mypath):
           os.mkdir(mypath)
@@ -200,7 +197,7 @@ def clear(table=None):
             except:
                 pass
     except Exception as e:
-        myLogger('Error cleaning: '+str(e), logLevel=xbmc.LOGERROR)
-        
+        logger.error('Error cleaning: '+str(e))
+
         pass
 

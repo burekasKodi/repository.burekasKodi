@@ -1,7 +1,6 @@
 import xbmc
 import xbmcaddon
 import os
-from myLogger import myLogger
 
 def GetLocalJson(item, prefix_local, color_local, all_setting):
     import PTN

@@ -17,10 +17,9 @@ import time
 
 from bs4 import BeautifulSoup
 
-#from .myLogger import myLogger
 import sys
 sys.path.append(os.path.abspath('..'))
-from myLogger import myLogger
+from myLogger import logger
 
 import urllib3
 import ssl
@@ -56,7 +55,7 @@ class SubtitleAPI:
 
     # Method Bellow returns a BeautifulSoup object of our html response
     def parse(self, html):
-        myLogger("Subscene parse data" + repr(html))
+        logger.debug("Subscene parse data" + repr(html))
         return BeautifulSoup(html, 'html.parser')
 
     # this method simply call and endpoint and return it as plantext
@@ -64,24 +63,24 @@ class SubtitleAPI:
         from service import notify3
         global error_page_text
 
-        myLogger("Subscene get_html_by_title")
+        logger.debug("Subscene get_html_by_title")
         method = 'GET'
 
         url = f'{self.URL}{self.search_page_slugs}/?query='+title;
 
         try:
             for i in range(5):
-                myLogger("Subscene search data: method " + method +"  url - " + repr(url) + " | title: " + title )
+                logger.debug("Subscene search data: method " + method +"  url - " + repr(url) + " | title: " + title )
                 s = cloudscraper.create_scraper(interpreter='native')
                 r = s.request(method, url)
                 if r.status_code == 403:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
                     time.sleep(delay)
                 else:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
                     break
             else:
-                myLogger("All attempts failed.")
+                logger.debug("All attempts failed.")
                 notify3("%s %s" %(error_page_text, str(r.status_code)))
 
         except:
@@ -96,22 +95,22 @@ class SubtitleAPI:
         from service import notify3
         global error_page_text
 
-        myLogger("Subscene get_html_by_url")
+        logger.debug("Subscene get_html_by_url")
         method = 'GET'
 
         try:
             for i in range(5):
-                myLogger("Subscene search data: method " + method +"  url - " + repr(url))
+                logger.debug("Subscene search data: method " + method +"  url - " + repr(url))
                 s = cloudscraper.create_scraper(interpreter='native')
                 r = s.request(method, url)
                 if r.status_code == 403:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
                     time.sleep(delay)
                 else:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
                     break
             else:
-                myLogger("All attempts failed.")
+                logger.debug("All attempts failed.")
                 notify3("%s %s" %(error_page_text, str(r.status_code)))
 
         except:
@@ -125,22 +124,22 @@ class SubtitleAPI:
         from service import notify3
         global error_page_text
 
-        myLogger("Subscene download_zip")
+        logger.debug("Subscene download_zip")
         method = 'GET'
 
         try:
             for i in range(5):
-                myLogger("Subscene download_zip url: " + repr(url))
+                logger.debug("Subscene download_zip url: " + repr(url))
                 s = cloudscraper.create_scraper(interpreter='native')
                 r = s.request(method, url)
                 if r.status_code == 403:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Retrying...")
                     time.sleep(delay)
                 else:
-                    myLogger(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
+                    logger.debug(f"Attempt {i+1}: Response code is {r.status_code}. Request successful.")
                     break
             else:
-                myLogger("All attempts failed.")
+                logger.debug("All attempts failed.")
                 notify3("%s %s" %(error_page_text, str(r.status_code)))
 
         except:
@@ -151,7 +150,7 @@ class SubtitleAPI:
         if r.status_code == 200:
             with open(filename, 'wb') as f:
                 f.write(r.content)
-                myLogger(f'Download completed: {filename}')
+                logger.debug(f'Download completed: {filename}')
         else:
             notify3(f'Download failed with status code: {r.status_code}')
 
@@ -168,7 +167,7 @@ class SubtitleAPI:
                 results.append({'link': link, 'name': name})
             # a list of dicts [...,{...},{'link': '/', 'name': ''},{...},...]
         except:
-            myLogger("Subscene search parse error")
+            logger.debug("Subscene search parse error")
 
         return results
 
@@ -189,7 +188,7 @@ class SubtitleAPI:
 
     # this method excutes ascync functions
     def get_download_link(self, url, lang):
-        myLogger("Subscene get_download_link")
+        logger.debug("Subscene get_download_link")
 
         soup = self.parse(self.get_html_by_url(url))
 
@@ -198,7 +197,7 @@ class SubtitleAPI:
             zip_link = element.a.get('href')
 
         full_zip_url = f'{self.URL}{zip_link}'
-        myLogger("Subscene get_download_link full_zip_url: " + repr(full_zip_url))
+        logger.debug("Subscene get_download_link full_zip_url: " + repr(full_zip_url))
 
         if full_zip_url == f'{self.URL}':
             return 'Subscene download url not found'
@@ -240,7 +239,7 @@ class SubtitleAPI:
                     'link': link
                 })
         # return list like: [...,{'lang':'english', 'name':'Movie Name', 'link':'/slug'},...]
-        myLogger("Subscene scrape_list result: " + repr(items))
+        logger.debug("Subscene scrape_list result: " + repr(items))
         return self.filter_langs(items)
 
     # scrape_download_page(url) method scrape subtitle author, download link and release information
@@ -328,9 +327,9 @@ class SubtitleAPI:
 
     # this method returns subtitles as list of dicts filterd and ready to download
     def movie(self, title=None, year=None, imdb_id=None, release_type=None):
-        myLogger("Subscene_movie search: imdb: %s | title: %s | year: %s" %(imdb_id,title,year))
+        logger.debug("Subscene_movie search: imdb: %s | title: %s | year: %s" %(imdb_id,title,year))
         search_results = self.search(title)
-        myLogger("Subscene_movie search_results: " + repr(search_results))
+        logger.debug("Subscene_movie search_results: " + repr(search_results))
         sub_list = []
 
         if len(search_results) > 1:
@@ -344,23 +343,23 @@ class SubtitleAPI:
                     filtered_results = search_results
             search_results = filtered_results
 
-        myLogger("Subscene_movie search_results filtered by year: " + repr(search_results))
+        logger.debug("Subscene_movie search_results filtered by year: " + repr(search_results))
         if search_results:
             link = search_results[0]['link']
             url = f'{self.URL}{link}'
-            myLogger("Subscene_movie page url: " + repr(url))
+            logger.debug("Subscene_movie page url: " + repr(url))
             sub_list = self.scrape_list(url)
             if release_type:
                 sub_list = self.filter_release_type(sub_list, release_type)
-            myLogger("Subscene_movie subtitles list filtered by language and release type: " + repr(sub_list))
+            logger.debug("Subscene_movie subtitles list filtered by language and release type: " + repr(sub_list))
 
         return sub_list
 
     # tvshow method returns list of subtitles target based on filter passed in
     def tvshow(self, title=None, imdb_id=None, release_type=None, season=None, episode=None):
-        myLogger("Subscene_tvshow search: imdb: %s | title: %s | season: %s | episode: %s" %(imdb_id,title,season,episode))
+        logger.debug("Subscene_tvshow search: imdb: %s | title: %s | season: %s | episode: %s" %(imdb_id,title,season,episode))
         search_results = self.search(title)
-        myLogger("Subscene_tvshow search_results: " + repr(search_results))
+        logger.debug("Subscene_tvshow search_results: " + repr(search_results))
         sub_list = []
 
         if season:
@@ -368,17 +367,17 @@ class SubtitleAPI:
         if search_results:
             link = search_results[0]['link']
             url = f'{self.URL}{link}'
-            myLogger("Subscene_tvshow page url: " + repr(url))
+            logger.debug("Subscene_tvshow page url: " + repr(url))
             sub_list = self.scrape_list(url)
             if release_type:
                 sub_list = self.filter_release_type(sub_list, release_type)
-            myLogger("Subscene_tvshow subtitles list filtered by language and release type: " + repr(sub_list))
+            logger.debug("Subscene_tvshow subtitles list filtered by language and release type: " + repr(sub_list))
 
             if season and episode:
                 se = self.make_series_target_string(season, episode)
                 sub_list = self.filter_episodes(sub_list, se)
 
-        myLogger("Subscene_tvshow subtitles list filtered by season and episode: " + repr(sub_list))
+        logger.debug("Subscene_tvshow subtitles list filtered by season and episode: " + repr(sub_list))
         return sub_list
 
     def __str__(self):
@@ -443,7 +442,7 @@ class SubtitleAPI:
             links_subscene=subtitle_list
             #z=z+1
 
-        myLogger("Subscene subtitles final: " + repr(subtitle_list))
+        logger.debug("Subscene subtitles final: " + repr(subtitle_list))
         return subtitle_list,result
 
     # def subscene_download_process(self, params, mode_subtitle):

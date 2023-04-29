@@ -2,7 +2,7 @@ import xbmcaddon
 import json, re
 import cache
 import requests
-from myLogger import myLogger
+from myLogger import logger
 
 def GetKtuvitJson(item,imdb_id,prefix_ktuvit,color_ktuvit):
     response,f_id = get_ktuvit_data(item,imdb_id)
@@ -85,9 +85,9 @@ def get_ktuvit_data(item, imdb_id):
     j_data=json.loads(response['d'])['Films']
     f_id=''
 
-    myLogger('Ktuvit data: ' + repr(data))
-    myLogger('Ktuvit response: ' + repr(response))
-    myLogger('Ktuvit j_data: ' + repr(j_data))
+    logger.debug('Ktuvit data: ' + repr(data))
+    logger.debug('Ktuvit response: ' + repr(response))
+    logger.debug('Ktuvit j_data: ' + repr(j_data))
 
     #first filtered by imdb
     for itt in j_data:
