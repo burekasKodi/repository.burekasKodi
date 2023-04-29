@@ -26,8 +26,8 @@ myName = myAddon.getAddonInfo('name')
 myLang = myAddon.getLocalizedString
 
 def wlog(msg):
-    #log((u"##**## [%s] %s" % ("Wizdom Subs", msg)), level=xbmc.LOGDEBUG)
-    log((u"##**## [%s] %s" % ("Wizdom Subs", msg)), level=xbmc.LOGINFO)
+    log((u"##**## [%s] %s" % ("Wizdom Subs", msg)), level=xbmc.LOGDEBUG)
+    #log((u"##**## [%s] %s" % ("Wizdom Subs", msg)), level=xbmc.LOGINFO)
 
 def getDomain():
     try:
