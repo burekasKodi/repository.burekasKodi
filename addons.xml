@@ -117,10 +117,10 @@
         </extension>
     </addon>
 
-    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.0.1" provider-name="burekas">
+    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.0.2" provider-name="burekas">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
-            <import addon="script.module.requests"/>
+    	    <import addon="script.module.requests"/>
         </requires>
         <extension point="xbmc.subtitle.module" library="service.py"/>
         <extension point="xbmc.addon.metadata">
