@@ -1,3 +1,10 @@
+1.0.2
+** Ktuvit Plus by Burekas **
+- Added sync matching percentages in the subtitles results
+- Arrangement of results according to sync matching percentages
+- Improving the search algorithm
+- Bug fixes, code cleaning and refactoring
+
 1.0.1
 ** Ktuvit Plus by Burekas **
 - Added support for manual search with these characters (+,-,_,.) as a seperator
