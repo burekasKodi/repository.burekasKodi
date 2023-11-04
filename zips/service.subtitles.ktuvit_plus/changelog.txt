@@ -1,3 +1,8 @@
+1.1.0
+** Ktuvit Plus by Burekas **
+- Improving the search algorithm
+- Bug fixes, code cleaning and refactoring
+
 1.0.2
 ** Ktuvit Plus by Burekas **
 - Added sync matching percentages in the subtitles results

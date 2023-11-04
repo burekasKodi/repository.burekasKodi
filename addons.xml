@@ -49,7 +49,7 @@
         </extension>
     </addon>
 
-    <addon id="service.subtitles.all_subs_plus" name="All Subs Plus" version="2.1.0" provider-name="burekas">
+    <addon id="service.subtitles.all_subs_plus" name="All Subs Plus" version="2.2.0" provider-name="burekas">
         <requires>
             <import addon="script.module.requests" version="2.9.1" />
             <import addon="script.module.beautifulsoup4" version="4.8.2" />
@@ -60,8 +60,11 @@
         <extension point="xbmc.service" library="autosub.py"/>
         <extension point="xbmc.subtitle.module" library="service.py"/>
         <extension point="xbmc.addon.metadata">
-            <summary lang="en">All sites Subs</summary>
-            <description lang="en">All sites Subs: Wizdom,Ktuvit,OpenSubtitles,Subscene.[CR]Made by Burekas | Thanks to: Sbs,Catz,wizdom,manacker,amet,drorba[CR]For news, updates &amp; more info - Visit: https://bit.ly/3DaU7JT</description>
+            <summary lang="en">Searching subtitles from several providers in one place</summary>
+            <summary lang="en_GB">Searching subtitles from several providers in one place</summary>
+            <summary lang="he">חיפוש כתוביות ממספר מקורות במקום אחד</summary>
+            <summary lang="he_IL">חיפוש כתוביות ממספר מקורות במקום אחד</summary>
+            <description lang="en">[CR]Providers included: Wizdom, Ktuvit, OpenSubtitles, Subscene and Local Storage.[CR][CR]Made by Burekas[CR]Thanks to: Sbs, Catz, wizdom, manacker, amet, drorba, rafi_d[CR][CR]For news, updates and more info - Visit: https://bit.ly/3DaU7JT[CR][CR]Burekas Repo: https://bit.ly/49mJge3</description>
             <language>en</language>
             <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
             <assets>
@@ -69,39 +72,38 @@
             </assets>
         </extension>
     </addon>
-
-    <addon id="service.subtitles.ktuvit_plus" name="Ktuvit Plus" version="1.0.2" provider-name="burekas">
-      <requires>
+    
+    <addon id="service.subtitles.ktuvit_plus" name="Ktuvit Plus" version="1.1.0" provider-name="burekas">
+    <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.beautifulsoup4" version="4.8.2"/>
         <import addon="script.module.requests" version="2.9.1"/>
-      </requires>
-      <extension point="xbmc.subtitle.module" library="service.py"/>
-      <extension point="xbmc.addon.metadata">
+    </requires>
+    <extension point="xbmc.subtitle.module" library="service.py"/>
+    <extension point="xbmc.addon.metadata">
         <summary lang="en_GB">Ktuvit.me</summary>
-        <description lang="en_GB">Search and Download subtitles from ktuvit.me. Thanks to: Catz.[CR]For news, updates &amp; more info - Visit: https://bit.ly/3DaU7JT</description>
+        <description lang="en_GB">[CR]Search and Download subtitles from ktuvit.me.[CR][CR]Made by Burekas[CR]Thanks to: Catz.[CR][CR]For news, updates and more info - Visit: https://bit.ly/3DaU7JT[CR][CR]Burekas Repo: https://bit.ly/49mJge3</description>
         <source>https://github.com/XBMCil/service.subtitles.ktuvit</source>
         <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
         <assets>
             <icon>icon.png</icon>
         </assets>
-      </extension>
+    </extension>
     </addon>
-
-    <addon id="service.subtitles.opensubtitles_plus" name="OpenSubtitles Plus" version="1.0.2"  provider-name="burekas">
+    
+    <addon id="service.subtitles.opensubtitles_plus" name="OpenSubtitles Plus" version="1.1.0"  provider-name="burekas">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
-    	    <import addon="script.module.requests" version="2.9.1" />
+            <import addon="script.module.requests" version="2.9.1" />
         </requires>
         <extension point="xbmc.subtitle.module"
-                   library="service.py" />
+                library="service.py" />
         <extension point="xbmc.addon.metadata">
             <summary>OpenSubtitles by OpenSubtitles.org</summary>
-            <description lang="en">Anonymously search and download subtitles for movies and TV-Series from OpenSubtitles.org without log-in. Search in 75 languages, 4.000.000+ subtitles, daily updates.[CR]For news, updates &amp; more info - Visit: https://bit.ly/3DaU7JT</description>
+            <description lang="en">[CR]Anonymously search and download subtitles for movies and TV-Series from OpenSubtitles.org without log-in. Search in 75 languages, 4.000.000+ subtitles, daily updates.[CR][CR]Made by Burekas[CR]Thanks to: amet, opensubtitles.[CR][CR]For news, updates and more info - Visit: https://bit.ly/3DaU7JT[CR][CR]Burekas Repo: https://bit.ly/49mJge3</description>
             <disclaimer>Works without log-in</disclaimer>
             <news>
-            Improved add-on by burekas for OpenSubtitles.org.[CR]Thanks to: amet, opensubtitles
-            v1.0.0
+            Improved add-on by burekas for OpenSubtitles.org.
             - Users are able to download subtitles as anonymous without authentication. Added localized descriptions, media files
             - Users are able to check for subtitles when Kodi is not playing, by using the manual search or by standing on an item and opening the subtitles search dialog (By key or by an external addon)  | @burekas
             </news>
@@ -116,16 +118,16 @@
             </assets>
         </extension>
     </addon>
-
-    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.0.2" provider-name="burekas">
+    
+    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.1.0" provider-name="burekas">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
-    	    <import addon="script.module.requests"/>
+            <import addon="script.module.requests"/>
         </requires>
         <extension point="xbmc.subtitle.module" library="service.py"/>
         <extension point="xbmc.addon.metadata">
             <summary lang="en">Wizdom Subs</summary>
-            <description lang="en">Wizdom Plus. Be smart use subs!  &amp;#xA;Visit us at http://wizdom.xyz[CR]For news, updates &amp; more info - Visit: https://bit.ly/3DaU7JT</description>
+            <description lang="en">[CR]Wizdom Plus. Be smart use subs![CR]Visit us at http://wizdom.xyz[CR][CR]Made by Burekas[CR]Thanks to: wizdom.[CR][CR]For news, updates and more info - Visit: https://bit.ly/3DaU7JT[CR][CR]Burekas Repo: https://bit.ly/49mJge3</description>
             <language>en</language>
             <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
             <assets>

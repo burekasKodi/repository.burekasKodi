@@ -1,3 +1,9 @@
+1.1.0
+** Wizdom Plus by Burekas **
+- Bug fix: Manual search
+- Improving the search algorithm
+- Bug fixes, code cleaning and refactoring
+
 1.0.2
 ** Wizdom Plus by Burekas **
 - Added sync matching percentages in the subtitles results
