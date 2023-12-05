@@ -49,7 +49,7 @@
         </extension>
     </addon>
 
-    <addon id="service.subtitles.all_subs_plus" name="All Subs Plus" version="2.2.0" provider-name="burekas">
+    <addon id="service.subtitles.all_subs_plus" name="All Subs Plus" version="2.3.0" provider-name="burekas">
         <requires>
             <import addon="script.module.requests" version="2.9.1" />
             <import addon="script.module.beautifulsoup4" version="4.8.2" />
@@ -73,7 +73,7 @@
         </extension>
     </addon>
     
-    <addon id="service.subtitles.ktuvit_plus" name="Ktuvit Plus" version="1.1.0" provider-name="burekas">
+    <addon id="service.subtitles.ktuvit_plus" name="Ktuvit Plus" version="1.1.1" provider-name="burekas">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.beautifulsoup4" version="4.8.2"/>
@@ -91,7 +91,7 @@
     </extension>
     </addon>
     
-    <addon id="service.subtitles.opensubtitles_plus" name="OpenSubtitles Plus" version="1.1.0"  provider-name="burekas">
+    <addon id="service.subtitles.opensubtitles_plus" name="OpenSubtitles Plus" version="2.0.0"  provider-name="burekas">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
             <import addon="script.module.requests" version="2.9.1" />
@@ -119,7 +119,7 @@
         </extension>
     </addon>
     
-    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.1.0" provider-name="burekas">
+    <addon id="service.subtitles.wizdom_plus" name="Wizdom Plus" version="1.1.1" provider-name="burekas">
         <requires>
             <import addon="xbmc.python" version="3.0.0"/>
             <import addon="script.module.requests"/>

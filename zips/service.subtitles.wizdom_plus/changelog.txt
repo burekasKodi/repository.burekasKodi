@@ -1,3 +1,7 @@
+1.1.1
+** Wizdom Plus by Burekas **
+- Bug fixes, code cleaning and refactoring
+
 1.1.0
 ** Wizdom Plus by Burekas **
 - Bug fix: Manual search
