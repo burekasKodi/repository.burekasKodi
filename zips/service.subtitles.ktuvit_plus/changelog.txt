@@ -1,3 +1,7 @@
+1.1.2
+** Ktuvit Plus by Burekas **
+- Bug fixes, code cleaning and refactoring
+
 1.1.1
 ** Ktuvit Plus by Burekas **
 - Bug fixes, code cleaning and refactoring
